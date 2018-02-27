@@ -15,12 +15,19 @@ class Account(Base):
     def __repr__(self):
         return "<Account (pk={0}, email='{1}')>".format(self.pk, self.email)
 
-class Opinion(Base):
-    __tablename__ = 'opinion'
+class Flag(Base):
+    __tablename__ = 'flag'
     __table_args__ = {'autoload':True, 'schema':'curation'}
 
     def __repr__(self):
-        return '<Opinion (pk={0})>'.format(self.pk)
+        return '<Flag (pk={0})>'.format(self.pk)
+
+class FlagAnnotation(Base):
+    __tablename__ = 'flag_annotation'
+    __table_args__ = {'autoload':True, 'schema':'curation'}
+
+    def __repr__(self):
+        return '<FlagAnnotation (pk={0})>'.format(self.pk)
 
 class Curation(Base):
     __tablename__ = 'curation'
@@ -40,7 +47,9 @@ class Gene(Base):
 # -------------
 Curation.account = relationship(Account, backref="curations")
 Curation.gene = relationship(Gene, backref="curations")
-Curation.opinion = relationship(Opinion, backref="curations")
+Curation.flag = relationship(Flag, backref="curations")
+
+Flag.flagAnnotation = relationship(FlagAnnotation, backref="flags")
 
 #---------
 # Test that all relationships/mappings are self-consistent.

@@ -13,7 +13,7 @@ from flask import current_app as app
 from . import valueFromRequest
 
 from ..model import Database
-from ..model.ModelClasses import Account, Gene, Opinion, Curation
+from ..model.ModelClasses import Account, Gene, Flag, Curation
 
 curate_page = flask.Blueprint("curate_page", __name__)
 
@@ -42,14 +42,14 @@ def curate():
 	except sqlalchemy.orm.exc.MultipleResultsFound:
 		app.logger.debug("Multiple accounts with same email address found: the database is incorrectly configured.")
 	
-	# fetch all opinions
-	opinions = dict()
-	for opinion in session.query(Opinion).all():
-		opinions[opinion.label] = opinion
+	# fetch all flags
+	flags = dict()
+	for flag in session.query(Flag).all():
+		flags[flag.label] = flag
 	
 	for gene_dict in data["genes"]:
 		gene_id = gene_dict["geneId"]
-		opinion_label = gene_dict["opinion"]
+		flag_label = gene_dict["opinion"]
 		
 		# look up the gene
 		try:
@@ -60,21 +60,21 @@ def curate():
 		except sqlalchemy.orm.exc.MultipleResultsFound:
 			app.logger.debug("Multiple genes with same ID found: the database is incorrectly configured.")
 
-		# create new opinion record if we see a new one
-		if opinion_label in opinions:
-			opinion = opinions[opinion_label]
+		# create new flag record if we see a new one
+		if flag_label in flags:
+			flag = flags[flag_label]
 #		else:
-#			opinion = Opinion()
-#			opinion.label = opinion_label
-#			session.add(opinion)
-#			opinions[opinion_label] = opinion
+#			flag = Flag()
+#			flag.label = flag_label
+#			session.add(flag)
+#			flags[flag_label] = flag
 
 		# create a new curation record
 		#
 		curation = Curation()
 		curation.account = account
 		curation.gene = gene
-		curation.opinion = opinion
+		curation.flag = flag
 			
 		session.add(curation)
 	
