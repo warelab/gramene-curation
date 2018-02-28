@@ -41,7 +41,7 @@ class Database(object):
 			    self.db_config["host"]     = flask_app.config["DB_HOST"]
 			    self.db_config["database"] = flask_app.config["DB_DATABASE"]
 			    self.db_config["user"]     = flask_app.config["DB_USER"]
-			    self.db_config["password"] = flask_app.config["DB_PASSWORD"] # set to empty string to get password from ~/.pgpass
+			    self.db_config["password"] = '' # flask_app.config["DB_PASSWORD"] # set to empty string to get password from ~/.pgpass
 			    self.db_config["port"]     = flask_app.config["DB_PORT"]
 			except KeyError:
 			    current_app.logger.debug("ERROR: an expected key in the server configuration " + \
