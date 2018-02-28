@@ -9,10 +9,10 @@ db = DatabaseConnection()
 Base = db.Base
 
 class Account(Base):
-    __tablename__ = 'Account'
+    __tablename__ = 'account'
     __table_args__ = {'autoload':True, 'schema':'curation'}
 
-    def __repr__(self):
+    def __repr__(self):	
         return "<Account (pk={0}, email='{1}')>".format(self.pk, self.email)
 
 class Flag(Base):
@@ -36,6 +36,13 @@ class Curation(Base):
     def __repr__(self):
         return '<Curation (pk={0})>'.format(self.pk)
 
+class CurationToFlagAnnotation(Base):
+    __tablename__ = 'curation_to_flag_annotation'
+    __table_args__ = {'autoload':True, 'schema':'curation'}
+
+    def __repr__(self):
+        return '<CurationToFlagAnnotation (curation_pk={0}, flag_annotation_pk={1})>'.format(self.curation_pk,flag_annotation_pk)
+
 class Gene(Base):
     __tablename__ = 'gene'
     __table_args__ = {'autoload':True, 'schema':'curation'}
@@ -48,8 +55,9 @@ class Gene(Base):
 Curation.account = relationship(Account, backref="curations")
 Curation.gene = relationship(Gene, backref="curations")
 Curation.flag = relationship(Flag, backref="curations")
-
-Flag.flagAnnotation = relationship(FlagAnnotation, backref="flags")
+Curation.flagAnnotation = relationship(FlagAnnotation,
+									   secondary=CurationToFlagAnnotation.__table__,
+									   backref="curations")
 
 #---------
 # Test that all relationships/mappings are self-consistent.
