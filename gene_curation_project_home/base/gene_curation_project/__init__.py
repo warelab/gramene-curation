@@ -64,7 +64,11 @@ def create_app(debug=False, conf=dict()):
 				# file.
 				# NOTE: For Python 3, the value from the uwsgi.opt dict below must be decoded, e.g.
 				# config_file = uwsgi.opt['flask-config-file'].decode("utf-8")
-				server_config_file = _app_setup_utils.getConfigFile(uwsgi.opt['flask-config-file'])
+				if 'flask-config-file' in uwsgi.opt:
+					config_file = uwsgi.opt['flask-config-file'].decode("utf-8")
+				else:
+					config_file = 'default.cfg'
+				server_config_file = _app_setup_utils.getConfigFile(config_file)
 			except ImportError:
 				print("Trying to run in production mode, but not running under uWSGI.\n"
 					  "You might try running again with the '--debug' (or '-d') flag.")
