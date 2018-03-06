@@ -53,7 +53,7 @@ args = parser.parse_args()
 # -------------------
 # Create app instance
 # -------------------
-from gene_curation_project import create_app
+from base.gene_curation_project import create_app
 
 app = create_app(debug=args.debug, conf=conf) # actually creates the Flask application instance
 
