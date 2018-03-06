@@ -4,7 +4,7 @@ import sqlalchemy
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
-from DatabaseConnection import DatabaseConnection
+from .DatabaseConnection import DatabaseConnection
 
 db = DatabaseConnection()
 Base = db.Base
@@ -24,7 +24,14 @@ class Account(Base):
     							  .order_by(Gene.gene_id)\
     							  .distinct()\
     							  .all()
-    	
+    def genesCuratedWithFlag(self,flag=None):
+    	session = Session.object_session(self) 
+    	return session.query(Gene).join(Curation, Account, Flag)\
+    							  .filter(self.pk==Curation.account_pk)\
+    							  .filter(Flag.label==flag)\
+    							  .order_by(Gene.gene_id)\
+    							  .distinct()\
+    							  .all()
 class Flag(Base):
     __tablename__ = 'flag'
     __table_args__ = {'autoload':True, 'schema':'curation'}

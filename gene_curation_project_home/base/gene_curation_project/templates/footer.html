@@ -1,0 +1,13 @@
+<html>
+<head>
+</head>
+<body>
+	<h1>user email is <span>{{user.email}}</span></h1>
+	<h1>genes curated</h1>
+	<ul>
+		{%for gene in user.genesCurated%}
+		<li>{{gene.gene_id}}</li>
+		{%endfor%}
+	</ul>
+</body>
+</html>
