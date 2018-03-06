@@ -25,7 +25,7 @@
 	<h2>genes flagged by {{users[0].email}}</h2>
 	<ul>
 		{% for gene in users[0].genesCuratedWithFlag('flag') %}
-		<li>{{gene.gene_id}}</li>
+		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li>
 		{% endfor %}
 	</ul>
 	{% endif %}

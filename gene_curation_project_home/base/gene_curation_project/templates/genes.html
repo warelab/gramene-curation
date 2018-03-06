@@ -1,0 +1,30 @@
+<html>
+<head>
+</head>
+<body>
+	{% if genes|length == 1 %}
+	{% set gene = genes[0] %}
+		<h1>{{gene.gene_id}}</h1>
+		<h2>total curations: {{gene.curations|length}}</h2>
+		<h2>okay curations: {{gene.curationsWithFlag('okay')|length}}</h2>
+		<h2>flag curations: {{gene.curationsWithFlag('flag')|length}}</h2>
+		<h2>not curated: {{gene.curationsWithFlag('curate')|length}}</h2>
+		<table border=1 cellspacing=0 cellpadding=5>
+			<tr>
+				<th>user</th>
+				<th>okay</th>
+				<th>flag</th>
+				<th>not curated</th>
+			</tr>
+			{% for user in users %}
+			<tr>
+				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "flag" %} &times; {% endif %}</td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "curate" %} &times; {% endif %}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	{% endif %}
+</body>
+</html>

@@ -24,12 +24,14 @@ def register_blueprints(app=None):
 	from .controllers.curate import curate_page
 	from .controllers.curate_report import curate_report_page
 	from .controllers.users import user_page
+	from .controllers.genes import gene_page
 	#from .controllers.controller1 import xxx
 
 	app.register_blueprint(index_page)
 	app.register_blueprint(curate_page)
 	app.register_blueprint(curate_report_page)
 	app.register_blueprint(user_page)
+	app.register_blueprint(gene_page)
 	#app.register_blueprint(xxx)
 
 # ================================================================================
