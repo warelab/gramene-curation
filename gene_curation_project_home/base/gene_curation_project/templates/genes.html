@@ -2,6 +2,9 @@
 <head>
 </head>
 <body>
+	
+	{# WHEN A SINGLE GENE IS SELECTED #}
+	
 	{% if genes|length == 1 %}
 	{% set gene = genes[0] %}
 		<h1>{{gene.gene_id}}</h1>
@@ -17,7 +20,7 @@
 				<th>not curated</th>
 			</tr>
 			{% for user in users if 'cshl' in user.email %}
-			<tr>
+			<tr bgcolor="#faf8e3">
 				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
 				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>
 				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "flag" %} &times; {% endif %}</td>
@@ -33,6 +36,46 @@
 			</tr>
 			{% endfor %}
 		</table>
+	
+	{% else %}
+
+	{# WHEN NO GENES ARE SELECTED #}
+
+	<h1>Gene List</h1>
+
+	<table border=1 cellspacing=0 cellpadding=5>
+		{% for flag in flags %}
+		<tr>
+			<th align="left">Number of "{{flag.label}}" flags</th>
+			<td align="right">{{ flag.curations|length}}</td>
+		{% endfor %}
+		</tr>
+		<tr>
+			<th align="left">Total number of genes</th>
+			<td align="right">{{genes|length}}</td>
+		</tr>
+	</table>
+	
+	<br><br>
+	
+	<table border=1 cellspacing=0 cellpadding=5>
+		<tr>
+			<th>Gene ID</th>
+			{% for flag in flags%}
+			<th># {{flag.label}}</th>
+			{% endfor %}
+		</tr>
+		{% for gene in genes %}
+		<tr>
+			<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
+			{% for flag in flags %}
+			<td align="right" width="75">{{gene.curationsWithFlag(flag=flag.label)|length}}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</table>
+	
 	{% endif %}
+
 </body>
 </html>

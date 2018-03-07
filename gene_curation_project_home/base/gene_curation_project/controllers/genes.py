@@ -44,13 +44,16 @@ def gene():
 		gene_query = gene_query.filter(Flag.label==flag_label)
 	if user_id:
 		gene_query = gene_query.filter(Account.pk==user_id)
-
+		
 	genes = gene_query.all()
 	
 	if len(genes)==1:
 		templateDict["users"] = [x.account for x in genes[0].curations]
-
-	#print(genes)
+	
+	flags = session.query(Flag).all()
+	
+	#print(flags)
+	templateDict["flags"] = flags
 	templateDict["genes"] = genes
 	
 	return render_template("genes.html", **templateDict)
