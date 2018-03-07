@@ -23,6 +23,7 @@ class Account(Base):
 								  .filter(self.pk==Curation.account_pk)\
 								  .order_by(Gene.gene_id)\
 								  .all()
+
 	def genesCuratedWithFlag(self,flag=None):
 		session = Session.object_session(self) 
 		return session.query(Gene).join(Curation, Account, Flag)\
@@ -30,6 +31,7 @@ class Account(Base):
 								  .filter(Flag.label==flag)\
 								  .order_by(Gene.gene_id)\
 								  .all()
+
 	def curationForGene(self,gene_id=None):
 		session = Session.object_session(self)
 		return session.query(Curation).join(Gene, Account)\
@@ -78,6 +80,21 @@ class Gene(Base):
 								  .filter(Flag.label==flag)\
 								  .all()
 
+class GeneTree(Base):
+	__tablename__ = 'gene_tree'
+	__table_args__ = {'autoload':True, 'schema':'curation'}
+
+	def __repr__(self):
+		return '<GeneTree (pk={0}, id={1})>'.format(self.pk, self.tree_id)
+
+class GeneToGeneTree(Base):
+	__tablename__ = 'gene_to_gene_tree'
+	__table_args__ = {'autoload':True, 'schema':'curation'}
+
+	def __repr__(self):
+		return '<GeneToGeneTree (gene_pk={0}, tree_pk={1})>'.format(self.gene_pk, self.tree_pk)
+
+
 # Relationships
 # -------------
 Curation.account = relationship(Account, backref="curations")
@@ -86,6 +103,9 @@ Curation.flag = relationship(Flag, backref="curations")
 Curation.flagAnnotation = relationship(FlagAnnotation,
 									   secondary=CurationToFlagAnnotation.__table__,
 									   backref="curations")
+Gene.trees = relationship(GeneTree,
+						  secondary=GeneToGeneTree.__table__,
+						  backref="genes")
 
 #---------
 # Test that all relationships/mappings are self-consistent.
