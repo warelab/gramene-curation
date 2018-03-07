@@ -16,7 +16,15 @@
 				<th>flag</th>
 				<th>not curated</th>
 			</tr>
-			{% for user in users %}
+			{% for user in users if 'cshl' in user.email %}
+			<tr>
+				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "flag" %} &times; {% endif %}</td>
+				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "curate" %} &times; {% endif %}</td>
+			</tr>
+			{% endfor %}
+			{% for user in users if 'cshl' not in user.email %}
 			<tr>
 				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
 				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>

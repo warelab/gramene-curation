@@ -28,7 +28,7 @@ def user():
 		users = [session.query(Account).filter(Account.pk==userId).one()]
 	except sqlalchemy.orm.exc.NoResultFound:
 		users = session.query(Account).all()
-	print(users)
+	
 	templateDict["users"] = users
 	
 	return render_template("users.html", **templateDict)

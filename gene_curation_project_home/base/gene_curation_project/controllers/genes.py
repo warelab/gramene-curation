@@ -50,7 +50,7 @@ def gene():
 	if len(genes)==1:
 		templateDict["users"] = [x.account for x in genes[0].curations]
 
-	print(genes)
+	#print(genes)
 	templateDict["genes"] = genes
 	
 	return render_template("genes.html", **templateDict)

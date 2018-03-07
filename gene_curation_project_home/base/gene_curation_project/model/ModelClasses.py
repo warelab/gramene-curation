@@ -20,24 +20,29 @@ class Account(Base):
 	def genesCurated(self):
 		session = Session.object_session(self) 
 		return session.query(Gene).join(Curation, Account)\
-								  .filter(self.pk==Curation.account_pk)\
+								  .filter(Curation.account_pk==self.pk)\
 								  .order_by(Gene.gene_id)\
 								  .all()
 
 	def genesCuratedWithFlag(self,flag=None):
 		session = Session.object_session(self) 
 		return session.query(Gene).join(Curation, Account, Flag)\
-								  .filter(self.pk==Curation.account_pk)\
+								  .filter(Curation.account_pk==self.pk)\
 								  .filter(Flag.label==flag)\
 								  .order_by(Gene.gene_id)\
 								  .all()
 
 	def curationForGene(self,gene_id=None):
 		session = Session.object_session(self)
-		return session.query(Curation).join(Gene, Account)\
+		assert gene_id is not None, "please specify a gene"
+		try:
+			return session.query(Curation).join(Gene, Account)\
 									  .filter(Account.pk==self.pk)\
 									  .filter(Gene.gene_id==gene_id)\
 									  .one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			return None
+		
 class Flag(Base):
 	__tablename__ = 'flag'
 	__table_args__ = {'autoload':True, 'schema':'curation'}
@@ -76,7 +81,7 @@ class Gene(Base):
 	def curationsWithFlag(self,flag=None):
 		session = Session.object_session(self) 
 		return session.query(Curation).join(Gene, Flag)\
-								  .filter(self.pk==Curation.gene_pk)\
+								  .filter(Curation.gene_pk==self.pk)\
 								  .filter(Flag.label==flag)\
 								  .all()
 

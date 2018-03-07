@@ -1,5 +1,13 @@
 <html>
 <head>
+	
+	<style>
+		#code {
+			font-family:monospace;
+		}
+		
+	</style>
+	
 </head>
 <body>
 	<h1>genes curated</h1>
@@ -22,10 +30,61 @@
 		{% endfor %}
 	</table>	
 	{% if users|length == 1 %}
+	{% set user = users[0] %}
 	<h2>genes flagged by {{users[0].email}}</h2>
+		
+		Genes where this user's curation agrees 80% or better with all other curations are marked in green.<br><br>
+
+		<table border=1 cellspacing=0 cellpadding=5>
+			<tr>
+				<th>Gene</th>
+				<th>curated as</th>
+				<th># <span id="code">okay</span></th>
+				<th>% <span id="code">okay</span></th>
+				<th># <span id="code">flag</span></th>
+				<th>% <span id="code">flag</span></th>
+				<th># not curated</th>
+				<th>% not curated</th>
+				<th>total</th>
+			</tr>
+			{% for gene in user.genesCurated %}
+			{% set user_flag_label = user.curationForGene(gene_id=gene.gene_id).flag.label %}
+				<tr>
+					<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
+					
+					<td align="center" id="code" {% if gene.curationsWithFlag(flag=user_flag_label)|length / gene.curations|length >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
+						{{user_flag_label}}
+					</td>
+
+					<td align="right">
+						{{gene.curationsWithFlag('okay')   | length}}
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100*gene.curationsWithFlag('okay')|length / gene.curations|length)}}%
+					</td>
+					<td align="right">
+						{{gene.curationsWithFlag('flag')   | length}}
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100 * gene.curationsWithFlag('flag')|length / gene.curations|length)}}%
+					</td>
+					<td align="right">
+						{{gene.curationsWithFlag('curate') | length}} 
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100 * gene.curationsWithFlag('curate')|length / gene.curations|length)}}%
+					</td>
+					<td align="right">
+						{{ gene.curations|length }}
+					</td>
+	<!--		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li> -->
+				</tr>
+			{% endfor %}
+		</table>
+
 	<ul>
-		{% for gene in users[0].genesCuratedWithFlag('flag') %}
-		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li>
+		{% for gene in user.genesCuratedWithFlag('flag') %}
+<!--		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li> -->
 		{% endfor %}
 	</ul>
 	{% endif %}
