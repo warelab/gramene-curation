@@ -56,6 +56,7 @@ args = parser.parse_args()
 from base.gene_curation_project import create_app
 
 app = create_app(debug=args.debug, conf=conf) # actually creates the Flask application instance
+app.config['PROPAGATE_EXCEPTIONS'] = True
 
 # -----------------------------------------
 # If using SQLAlchemy, uncomment this block

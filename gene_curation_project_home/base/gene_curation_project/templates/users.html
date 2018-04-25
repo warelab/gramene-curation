@@ -31,7 +31,7 @@
 	</table>	
 	{% if users|length == 1 %}
 	{% set user = users[0] %}
-	<h2>genes flagged by {{users[0].email}}</h2>
+	<h2>genes flagged by {{user.email}}</h2>
 		
 		Genes where this user's curation agrees 80% or better with all other curations are marked in green.<br><br>
 
@@ -46,42 +46,48 @@
 				<th># not curated</th>
 				<th>% not curated</th>
 				<th>total</th>
+				<th>time curated</th>
 			</tr>
-			{% for gene in user.genesCurated %}
-			{% set user_flag_label = user.curationForGene(gene_id=gene.gene_id).flag.label %}
-				<tr>
-					<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
-					
-					<td align="center" id="code" {% if gene.curationsWithFlag(flag=user_flag_label)|length / gene.curations|length >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
-						{{user_flag_label}}
-					</td>
-
-					<td align="right">
-						{{gene.curationsWithFlag('okay')   | length}}
-					</td>
-					<td align="right">
-						{{ "{:.0f}".format(100*gene.curationsWithFlag('okay')|length / gene.curations|length)}}%
-					</td>
-					<td align="right">
-						{{gene.curationsWithFlag('flag')   | length}}
-					</td>
-					<td align="right">
-						{{ "{:.0f}".format(100 * gene.curationsWithFlag('flag')|length / gene.curations|length)}}%
-					</td>
-					<td align="right">
-						{{gene.curationsWithFlag('curate') | length}} 
-					</td>
-					<td align="right">
-						{{ "{:.0f}".format(100 * gene.curationsWithFlag('curate')|length / gene.curations|length)}}%
-					</td>
-					<td align="right">
-						{{ gene.curations|length }}
-					</td>
-	<!--		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li> -->
-				</tr>
+			{% for curation in user.curations %}
+			{% set gene = curation.gene %}
+			{% set nCurations = gene.curations | length %}
+			{% set nCurationsOkay = gene.curationsWithFlag('okay') | length %}
+			<tr>
+				<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
+				<td align="center" id="code" {% if gene.curationsWithFlag(flag=curation.flag.label)|length / nCurations >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
+					{{curation.flag.label}}
+				</td>
+				<td align="right">
+					{{nCurationsOkay}}
+				</td>
+				<td align="right">
+					{{ "{:.0f}".format(100*nCurationsOkay / nCurations)}}%
+				</td>
+				<td align="right">
+					{{nCurationsOkay}}
+				</td>
+				<td align="right">
+					{{ "{:.0f}".format(100 * gene.curationsWithFlag('flag')|length / nCurations)}}%
+				</td>
+				<td align="right">
+					{{gene.curationsWithFlag('curate') | length}} 
+				</td>
+				<td align="right">
+					{{ "{:.0f}".format(100 * gene.curationsWithFlag('curate')|length / nCurations)}}%
+				</td>
+				<td align="right">
+					{{ nCurations }}
+				</td>
+				<td align="right">
+					{% if curation.timestamp %}
+					{{curation.timestamp.strftime('%d %B %Y')}}
+					{% else %}
+					NA
+					{% endif %}
+				</td>
+			</tr>
 			{% endfor %}
 		</table>
-
 	<ul>
 		{% for gene in user.genesCuratedWithFlag('flag') %}
 <!--		<li><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></li> -->

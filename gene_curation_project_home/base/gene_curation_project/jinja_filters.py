@@ -32,3 +32,17 @@ def j2split(context, value, delimiter=None):
 def j2join(context, value, delimiter=","):
     return delimiter.join(value)
 
+@jinja2.contextfilter
+@blueprint.app_template_filter()
+def str2datetime(context, value):
+    '''
+    Format date : "2017-10-28T02:20:32" -> "28 October 2017"
+    '''
+    #
+    # This is useful: http://strftime.org
+    #
+    if isinstance(value, str):
+        if "T" in value:
+            dt = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+            return dt # type: datetime.datetime
+            #.strftime('%Y-%m-%d')

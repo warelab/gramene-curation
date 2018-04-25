@@ -30,5 +30,5 @@ def user():
 		users = session.query(Account).all()
 	
 	templateDict["users"] = users
-	
+	print(type(users[0].curations[0].timestamp))
 	return render_template("users.html", **templateDict)
