@@ -7,27 +7,44 @@
 		}
 		
 	</style>
-	
+	<link href='/static/js/tablesort/style.css' rel='stylesheet'>
+	<link href='/static/js/tablesort/tablesort.css' rel='stylesheet'>
+	<script src='/static/js/tablesort/tablesort.min.js'></script>
+	<script src='/static/js/tablesort/sorts/tablesort.date.min.js'></script>
+	<script src='/static/js/tablesort/sorts/tablesort.number.min.js'></script>
+	<script>
+		function initTablesort() {
+			var geneTable = document.getElementById('gene-table');
+			if (geneTable) {
+				new Tablesort(geneTable);
+			}
+			new Tablesort(document.getElementById('user-table'))
+		}
+	</script>
 </head>
-<body>
-	<h1>genes curated</h1>
-	<table border=1 cellspacing=0 cellpadding=5>
-		<tr>
-			<th>user</th>
-			<th>total</th>
-			<th>okay</th>
-			<th>flag</th>
-			<th>not curated</th>
-		</tr>
-		{% for user in users %}
-		<tr>
-			<td><a href='/user?id={{user.pk}}'>{{user.email}}</a></td>
-			<td align="right">{{user.genesCurated|length}}</td>
-			<td align="right">{{user.genesCuratedWithFlag('okay')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('okay')|length/user.genesCurated|length)}}%)</td>
-			<td align="right">{{user.genesCuratedWithFlag('flag')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('flag')|length/user.genesCurated|length)}}%)</td>
-			<td align="right">{{user.genesCuratedWithFlag('curate')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('curate')|length/user.genesCurated|length)}}%)</td>
-		</tr>
-		{% endfor %}
+<body onLoad="initTablesort()">
+	<h2>genes curated</h2>
+	<table id="user-table" class="sort" border=1 cellspacing=0 cellpadding=5>
+		<thead>
+			<tr data-sort-method='none'>
+				<th>user</th>
+				<th>total</th>
+				<th>okay</th>
+				<th>flag</th>
+				<th>not curated</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for user in users %}
+			<tr>
+				<td><a href='/user?id={{user.pk}}'>{{user.email}}</a></td>
+				<td align="right">{{user.genesCurated|length}}</td>
+				<td align="right">{{user.genesCuratedWithFlag('okay')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('okay')|length/user.genesCurated|length)}}%)</td>
+				<td align="right">{{user.genesCuratedWithFlag('flag')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('flag')|length/user.genesCurated|length)}}%)</td>
+				<td align="right">{{user.genesCuratedWithFlag('curate')|length}} ({{'%d' % (100*user.genesCuratedWithFlag('curate')|length/user.genesCurated|length)}}%)</td>
+			</tr>
+			{% endfor %}
+		</tbody>
 	</table>	
 	{% if users|length == 1 %}
 	{% set user = users[0] %}
@@ -35,58 +52,62 @@
 		
 		Genes where this user's curation agrees 80% or better with all other curations are marked in green.<br><br>
 
-		<table border=1 cellspacing=0 cellpadding=5>
-			<tr>
-				<th>Gene</th>
-				<th>curated as</th>
-				<th># <span id="code">okay</span></th>
-				<th>% <span id="code">okay</span></th>
-				<th># <span id="code">flag</span></th>
-				<th>% <span id="code">flag</span></th>
-				<th># not curated</th>
-				<th>% not curated</th>
-				<th>total</th>
-				<th>time curated</th>
-			</tr>
-			{% for curation in user.curations %}
-			{% set gene = curation.gene %}
-			{% set nCurations = gene.curations | length %}
-			{% set nCurationsOkay = gene.curationsWithFlag('okay') | length %}
-			<tr>
-				<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
-				<td align="center" id="code" {% if gene.curationsWithFlag(flag=curation.flag.label)|length / nCurations >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
-					{{curation.flag.label}}
-				</td>
-				<td align="right">
-					{{nCurationsOkay}}
-				</td>
-				<td align="right">
-					{{ "{:.0f}".format(100*nCurationsOkay / nCurations)}}%
-				</td>
-				<td align="right">
-					{{nCurationsOkay}}
-				</td>
-				<td align="right">
-					{{ "{:.0f}".format(100 * gene.curationsWithFlag('flag')|length / nCurations)}}%
-				</td>
-				<td align="right">
-					{{gene.curationsWithFlag('curate') | length}} 
-				</td>
-				<td align="right">
-					{{ "{:.0f}".format(100 * gene.curationsWithFlag('curate')|length / nCurations)}}%
-				</td>
-				<td align="right">
-					{{ nCurations }}
-				</td>
-				<td align="right">
-					{% if curation.timestamp %}
-					{{curation.timestamp.strftime('%d %B %Y')}}
-					{% else %}
-					NA
-					{% endif %}
-				</td>
-			</tr>
-			{% endfor %}
+		<table id="gene-table" class="sort" border=1 cellspacing=0 cellpadding=5>
+			<thead>
+				<tr data-sort-method='none'>
+					<th>Gene</th>
+					<th>curated as</th>
+					<th data-sort-method='number'># <span id="code">okay</span></th>
+					<th data-sort-method='number'>% <span id="code">okay</span></th>
+					<th data-sort-method='number'># <span id="code">flag</span></th>
+					<th data-sort-method='number'>% <span id="code">flag</span></th>
+					<th data-sort-method='number'># not curated</th>
+					<th data-sort-method='number'>% not curated</th>
+					<th data-sort-method='number'>total</th>
+					<th data-sort-method='date'>time curated</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for curation in user.curations %}
+				{% set gene = curation.gene %}
+				{% set nCurations = gene.curations | length %}
+				{% set nCurationsOkay = gene.curationsWithFlag('okay') | length %}
+				<tr>
+					<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
+					<td align="center" id="code" {% if gene.curationsWithFlag(flag=curation.flag.label)|length / nCurations >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
+						{{curation.flag.label}}
+					</td>
+					<td align="right">
+						{{nCurationsOkay}}
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100*nCurationsOkay / nCurations)}}%
+					</td>
+					<td align="right">
+						{{nCurationsOkay}}
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100 * gene.curationsWithFlag('flag')|length / nCurations)}}%
+					</td>
+					<td align="right">
+						{{gene.curationsWithFlag('curate') | length}} 
+					</td>
+					<td align="right">
+						{{ "{:.0f}".format(100 * gene.curationsWithFlag('curate')|length / nCurations)}}%
+					</td>
+					<td align="right">
+						{{ nCurations }}
+					</td>
+					<td align="right">
+						{% if curation.timestamp %}
+						{{curation.timestamp.strftime('%d %B %Y')}}
+						{% else %}
+						NA
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
 		</table>
 	<ul>
 		{% for gene in user.genesCuratedWithFlag('flag') %}
