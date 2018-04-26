@@ -9,7 +9,7 @@ from flask import request, render_template
 from . import valueFromRequest
 
 from ..model import Database
-from ..model.ModelClasses import Account, Gene, Flag, FlagAnnotation, Curation
+from ..model.ModelClasses import Account, Gene, GeneTree, GeneToGeneTree, Flag, FlagAnnotation, Curation
 
 gene_page = flask.Blueprint("gene_page", __name__)
 
@@ -25,17 +25,21 @@ def gene():
 	gene_id = valueFromRequest(key="id", request=request)
 	user_id = valueFromRequest(key="user", request=request)
 	flag_label = valueFromRequest(key="flag", request=request)
+	tree_id = valueFromRequest(key="tree_id", request=request)
+	set_id = valueFromRequest(key="set_id", request=request)
 
 	gene_query = session.query(Gene)
 
 	# JOIN statements
 	# ---------------
-	if any([user_id, flag_label]):
+	if any([user_id, flag_label, tree_id, set_id]):
 		gene_query = gene_query.join(Curation)
 		if user_id:
 			gene_query = gene_query.join(Account)
 		if flag_label:
 			gene_query = gene_query.join(Flag)
+		if (tree_id or set_id):
+			gene_query = gene_query.join(GeneTree,GeneToGeneTree)
 
 	# FILTER statements
 	if gene_id:
@@ -44,6 +48,10 @@ def gene():
 		gene_query = gene_query.filter(Flag.label==flag_label)
 	if user_id:
 		gene_query = gene_query.filter(Account.pk==user_id)
+	if tree_id:
+		gene_query = gene_query.filter(GeneTree.tree_id==tree_id)
+	if set_id:
+		gene_query = gene_query.filter(GeneTree.set_id==set_id)
 		
 	genes = gene_query.all()
 	
