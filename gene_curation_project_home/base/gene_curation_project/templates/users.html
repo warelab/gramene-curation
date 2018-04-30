@@ -65,6 +65,7 @@
 					<th data-sort-method='number'>% not curated</th>
 					<th data-sort-method='number'>total</th>
 					<th data-sort-method='date'>time curated</th>
+					<th data-sort-method='none'>Apollo link</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -72,6 +73,7 @@
 				{% set gene = curation.gene %}
 				{% set nCurations = gene.curations | length %}
 				{% set nCurationsOkay = gene.curationsWithFlag('okay') | length %}
+				{% set loc = gene.genomicLocation(gene.gene_id) %}
 				<tr>
 					<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
 					<td align="center" id="code" {% if gene.curationsWithFlag(flag=curation.flag.label)|length / nCurations >= 0.80 %} bgcolor="#d6ffdb" {% endif %}>
@@ -104,6 +106,9 @@
 						{% else %}
 						NA
 						{% endif %}
+					</td>
+					<td>
+						<a href="http://data.maizecode.org/apollo/annotator/loadLink?loc={{loc.region}}:{{loc.start}}..{{loc.end}}">Apollo</a>
 					</td>
 				</tr>
 				{% endfor %}

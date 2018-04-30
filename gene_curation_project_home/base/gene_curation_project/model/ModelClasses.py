@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import requests
 import sqlalchemy
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
@@ -8,6 +9,7 @@ from .DatabaseConnection import DatabaseConnection
 
 db = DatabaseConnection()
 Base = db.Base
+locationCache = {}
 
 class Account(Base):
 	__tablename__ = 'account'
@@ -99,6 +101,15 @@ class Gene(Base):
 								  .filter(GeneTree.tree_id==tree_id)\
 								  .filter(GeneTree.set_id==set_id)\
 								  .all()
+	def genomicLocation(self,gene_id=None):
+		location = locationCache.get(gene_id)
+		if not location:
+			url = 'http://data.gramene.org/search?fl=id,region,start,end&q=id:{0}'.format(gene_id)
+			r = requests.get(url)
+			j = r.json()
+			location = j['response']['docs'][0]
+			locationCache[gene_id] = location
+		return location
 
 class GeneTree(Base):
 	__tablename__ = 'gene_tree'

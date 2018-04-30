@@ -18,12 +18,15 @@
 	
 	{% if genes|length == 1 %}
 	{% set gene = genes[0] %}
+	{% set loc = gene.genomicLocation(gene.gene_id) %}
 	{% for tree in gene.trees %}
-		<h1>{{gene.gene_id}} in tree {{tree.tree_id}}</h1>
+		<h2>{{gene.gene_id}} in tree {{tree.tree_id}}</h1>
 		<h2>total curations: {{gene.curations|length}} -- N.B. not limited to this tree</h2>
 		<h2>okay curations: {{gene.curationsWithFlagAndTree('okay', tree.tree_id, tree.set_id)|length}}</h2>
 		<h2>flag curations: {{gene.curationsWithFlagAndTree('flag', tree.tree_id, tree.set_id)|length}}</h2>
 		<h2>not curated: {{gene.curationsWithFlagAndTree('curate', tree.tree_id, tree.set_id)|length}}</h2>
+		<h2>link to <a href="http://data.maizecode.org/apollo/annotator/loadLink?loc={{loc.region}}:{{loc.start}}..{{loc.end}}">Apollo</a></h2>
+
 		<table class="sort" id="gene-table" border=1 cellspacing=0 cellpadding=5>
 			<thead>
 				<tr data-sort-method='none'>
@@ -82,8 +85,10 @@
 			{% for flag in flags%}
 			<th># {{flag.label}}</th>
 			{% endfor %}
+			<th>Apollo link</th>
 		</tr>
 		{% for gene in genes %}
+			{% set loc = gene.genomicLocation(gene.gene_id) %}
 			{% for tree in gene.trees %}
 			<tr>
 				<td><a href="/gene?id={{gene.gene_id}}&tree_id={{tree.tree_id}}&set_id={{tree.set_id}}">{{gene.gene_id}}</a></td>
@@ -91,6 +96,7 @@
 				{% for flag in flags %}
 				<td align="right" width="75">{{gene.curationsWithFlagAndTree(flag=flag.label,tree_id=tree.tree_id,set_id=tree.set_id)|length}}</td>
 				{% endfor %}
+				<td><a href="http://data.maizecode.org/apollo/annotator/loadLink?loc={{loc.region}}:{{loc.start}}..{{loc.end}}">Apollo</a></td>
 			</tr>
 			{% endfor %}
 		{% endfor %}
