@@ -107,8 +107,9 @@ class Gene(Base):
 			url = 'http://data.gramene.org/search?fl=id,region,start,end&q=id:{0}'.format(gene_id)
 			r = requests.get(url)
 			j = r.json()
-			location = j['response']['docs'][0]
-			locationCache[gene_id] = location
+			if len(j['response']['docs']):
+				location = j['response']['docs'][0]
+				locationCache[gene_id] = location
 		return location
 
 class GeneTree(Base):
