@@ -1,0 +1,131 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Gramene Curation Results
+# during dev, should point to your local machine
+host: 127.0.0.1:10010
+# basePath prefixes all resource paths 
+basePath: /
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /curations:
+    x-swagger-router-controller: curations
+    get:
+      description: Returns results from curation db
+      operationId: curations
+      parameters:
+        - name: since
+          in: query
+          description: earliest date
+          required: false
+          type: string
+        - name: until
+          in: query
+          description: last date
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/CurationsResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /hello:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: hello_world
+    get:
+      description: Returns 'Hello' to the caller
+      # used as the method name of the controller
+      operationId: hello
+      parameters:
+        - name: name
+          in: query
+          description: The name of the person to whom to say hello
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/HelloWorldResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  HelloWorldResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  CurationsResponse:
+    required:
+      - header
+      - results
+    properties:
+      header:
+        $ref: '#/definitions/Header'
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/Curation'
+  Header:
+    required:
+      - metadata
+    properties:
+      metadata:
+        properties:
+          params:
+            properties:
+              since:
+                type: string
+              until:
+                type: string
+  Curation:
+    required:
+      - gene_id
+      - email
+      - flag
+      - timestamp
+      - id
+    properties:
+      gene_id:
+        type: string
+      email:
+        type: string
+      flag:
+        type: string
+        enum:
+          - "okay"
+          - "flag"
+      reason:
+        type: string
+      timestamp:
+        type: string
+      id:
+        type: integer
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
