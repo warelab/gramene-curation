@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import requests
 import sqlalchemy
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
@@ -8,6 +9,7 @@ from .DatabaseConnection import DatabaseConnection
 
 db = DatabaseConnection()
 Base = db.Base
+locationCache = {}
 
 class Account(Base):
 	__tablename__ = 'account'
@@ -32,16 +34,22 @@ class Account(Base):
 								  .order_by(Gene.gene_id)\
 								  .all()
 
-	def curationForGene(self,gene_id=None):
+	def curationForGene(self,gene_id=None,tree_id=None,set_id=None):
 		session = Session.object_session(self)
 		assert gene_id is not None, "please specify a gene"
+		assert tree_id is not None, "please specify a tree"
+		assert set_id is not None, "please specify a set"
 		try:
-			return session.query(Curation).join(Gene, Account)\
+			curations = session.query(Curation).join(Gene, Account, GeneToGeneTree, GeneTree)\
 									  .filter(Account.pk==self.pk)\
 									  .filter(Gene.gene_id==gene_id)\
-									  .one()
+									  .filter(GeneTree.tree_id==tree_id)\
+									  .filter(GeneTree.set_id==set_id)\
+									  .order_by(Curation.timestamp)\
+									  .all()
 		except sqlalchemy.orm.exc.NoResultFound:
 			return None
+		return curations[0]
 		
 class Flag(Base):
 	__tablename__ = 'flag'
@@ -62,7 +70,7 @@ class Curation(Base):
 	__table_args__ = {'autoload':True, 'schema':'curation'}
 
 	def __repr__(self):
-		return '<Curation (pk={0})>'.format(self.pk)
+		return '<Curation (pk={0} user={1} gene={2} timestamp={3})>'.format(self.pk,self.account.email,self.gene.gene_id,self.timestamp)
 
 class CurationToFlagAnnotation(Base):
 	__tablename__ = 'curation_to_flag_annotation'
@@ -85,12 +93,31 @@ class Gene(Base):
 								  .filter(Flag.label==flag)\
 								  .all()
 
+	def curationsWithFlagAndTree(self,flag=None,tree_id=None,set_id=None):
+		session = Session.object_session(self) 
+		return session.query(Curation).join(Gene, Flag, GeneToGeneTree, GeneTree)\
+								  .filter(Curation.gene_pk==self.pk)\
+								  .filter(Flag.label==flag)\
+								  .filter(GeneTree.tree_id==tree_id)\
+								  .filter(GeneTree.set_id==set_id)\
+								  .all()
+	def genomicLocation(self,gene_id=None):
+		location = locationCache.get(gene_id)
+		if not location:
+			url = 'http://data.gramene.org/search?fl=id,region,start,end&q=id:{0}'.format(gene_id)
+			r = requests.get(url)
+			j = r.json()
+			if len(j['response']['docs']):
+				location = j['response']['docs'][0]
+				locationCache[gene_id] = location
+		return location
+
 class GeneTree(Base):
 	__tablename__ = 'gene_tree'
 	__table_args__ = {'autoload':True, 'schema':'curation'}
 
 	def __repr__(self):
-		return '<GeneTree (pk={0}, id={1})>'.format(self.pk, self.tree_id)
+		return '<GeneTree (pk={0}, id={1}, set={2})>'.format(self.pk, self.tree_id,  self.set_id)
 
 class GeneToGeneTree(Base):
 	__tablename__ = 'gene_to_gene_tree'

@@ -1,41 +1,60 @@
 <html>
 <head>
+	<link href='/static/js/tablesort/style.css' rel='stylesheet'>
+	<link href='/static/js/tablesort/tablesort.css' rel='stylesheet'>
+	<script src='/static/js/tablesort/tablesort.min.js'></script>
+	<script src='/static/js/tablesort/sorts/tablesort.date.min.js'></script>
+	<script src='/static/js/tablesort/sorts/tablesort.number.min.js'></script>
+	<script>
+		function initTablesort() {
+			var table = document.getElementById('gene-table');
+			if (table) new Tablesort(table)
+		}
+	</script>
 </head>
-<body>
+<body onLoad="initTablesort()">
 	
 	{# WHEN A SINGLE GENE IS SELECTED #}
-	
 	{% if genes|length == 1 %}
 	{% set gene = genes[0] %}
-		<h1>{{gene.gene_id}}</h1>
-		<h2>total curations: {{gene.curations|length}}</h2>
-		<h2>okay curations: {{gene.curationsWithFlag('okay')|length}}</h2>
-		<h2>flag curations: {{gene.curationsWithFlag('flag')|length}}</h2>
-		<h2>not curated: {{gene.curationsWithFlag('curate')|length}}</h2>
-		<table border=1 cellspacing=0 cellpadding=5>
-			<tr>
-				<th>user</th>
-				<th>okay</th>
-				<th>flag</th>
-				<th>not curated</th>
-			</tr>
-			{% for user in users if 'cshl' in user.email %}
-			<tr bgcolor="#faf8e3">
-				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "flag" %} &times; {% endif %}</td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "curate" %} &times; {% endif %}</td>
-			</tr>
-			{% endfor %}
-			{% for user in users if 'cshl' not in user.email %}
-			<tr>
-				<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "okay" %} &times; {% endif %}</td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "flag" %} &times; {% endif %}</td>
-				<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id).flag.label == "curate" %} &times; {% endif %}</td>
-			</tr>
-			{% endfor %}
+	{% set loc = gene.genomicLocation(gene.gene_id) %}
+	{% for tree in gene.trees %}
+		<h2>{{gene.gene_id}} in tree {{tree.tree_id}}</h1>
+		<h2>total curations: {{gene.curations|length}} -- N.B. not limited to this tree</h2>
+		<h2>okay curations: {{gene.curationsWithFlagAndTree('okay', tree.tree_id, tree.set_id)|length}}</h2>
+		<h2>flag curations: {{gene.curationsWithFlagAndTree('flag', tree.tree_id, tree.set_id)|length}}</h2>
+		<h2>not curated: {{gene.curationsWithFlagAndTree('curate', tree.tree_id, tree.set_id)|length}}</h2>
+		<h2>link to <a href="http://data.maizecode.org/apollo/annotator/loadLink?loc={{loc.region}}:{{loc.start}}..{{loc.end}}">Apollo</a></h2>
+
+		<table class="sort" id="gene-table" border=1 cellspacing=0 cellpadding=5>
+			<thead>
+				<tr data-sort-method='none'>
+					<th>user</th>
+					<th data-sort-method='number'>okay</th>
+					<th data-sort-method='number'>flag</th>
+					<th data-sort-method='number'>not curated</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user in users if 'cshl' in user.email %}
+				<tr bgcolor="#faf8e3">
+					<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "okay" %} &times; {% endif %}</td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "flag" %} &times; {% endif %}</td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "curate" %} &times; {% endif %}</td>
+				</tr>
+				{% endfor %}
+				{% for user in users if 'cshl' not in user.email %}
+				<tr>
+					<td><a href="/user?id={{user.pk}}">{{user.email}}</a></td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "okay" %} &times; {% endif %}</td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "flag" %} &times; {% endif %}</td>
+					<td width=100 align="center">{% if user.curationForGene(gene_id=gene.gene_id, tree_id=tree.tree_id, set_id=tree.set_id).flag.label == "curate" %} &times; {% endif %}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
 		</table>
+	{% endfor %}
 	
 	{% else %}
 
@@ -43,37 +62,48 @@
 
 	<h1>Gene List</h1>
 
-	<table border=1 cellspacing=0 cellpadding=5>
-		{% for flag in flags %}
-		<tr>
-			<th align="left">Number of "{{flag.label}}" flags</th>
-			<td align="right">{{ flag.curations|length}}</td>
-		{% endfor %}
-		</tr>
-		<tr>
-			<th align="left">Total number of genes</th>
-			<td align="right">{{genes|length}}</td>
-		</tr>
-	</table>
+    <table border=1 cellspacing=0 cellpadding=5>
+        {% for flag in flags %}
+        <tr>
+            <th align="left">Number of "{{flag.label}}" flags</th>
+            <td align="right">{{ flag.curations|length}}</td>
+        {% endfor %}
+        </tr>
+        <tr>
+            <th align="left">Total number of genes</th>
+            <td align="right">{{genes|length}}</td>
+        </tr>
+    </table>
 	
 	<br><br>
 	
-	<table border=1 cellspacing=0 cellpadding=5>
-		<tr>
-			<th>Gene ID</th>
-			{% for flag in flags%}
-			<th># {{flag.label}}</th>
-			{% endfor %}
-		</tr>
-		{% for gene in genes %}
-		<tr>
-			<td><a href="/gene?id={{gene.gene_id}}">{{gene.gene_id}}</a></td>
-			{% for flag in flags %}
-			<td align="right" width="75">{{gene.curationsWithFlag(flag=flag.label)|length}}</td>
-			{% endfor %}
-		</tr>
-		{% endfor %}
-	</table>
+    <table class="sort" border=1 cellspacing=0 cellpadding=5>
+        <tr>
+            <th>Gene ID</th>
+            <th>GeneTree ID</th>
+            {% for flag in flags%}
+            <th># {{flag.label}}</th>
+            {% endfor %}
+            <th>Apollo link</th>
+        </tr>
+        {% for gene in genes %}
+            {% set loc = gene.genomicLocation(gene.gene_id) %}
+            {% for tree in gene.trees %}
+            <tr>
+                <td><a href="/gene?id={{gene.gene_id}}&tree_id={{tree.tree_id}}&set_id={{tree.set_id}}">{{gene.gene_id}}</a></td>
+                <td>{{tree.tree_id}}</td>
+                {% for flag in flags %}
+                <td align="right" width="75">{{gene.curationsWithFlagAndTree(flag=flag.label,tree_id=tree.tree_id,set_id=tree.set_id)|length}}</td>
+                {% endfor %}
+                {% if loc %}
+                <td><a href="http://data.maizecode.org/apollo/annotator/loadLink?loc={{loc.region}}:{{loc.start}}..{{loc.end}}">Apollo</a></td>
+                {% else %}
+                <td>location missing</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
 	
 	{% endif %}
 

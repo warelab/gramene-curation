@@ -30,5 +30,4 @@ def user():
 		users = session.query(Account).all()
 	
 	templateDict["users"] = users
-	
 	return render_template("users.html", **templateDict)
