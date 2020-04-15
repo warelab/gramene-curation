@@ -17,6 +17,8 @@ consumes:
 # format of the responses to the client (Accepts)
 produces:
   - application/json
+  - text/plain
+  - text/tab-separated-values
 paths:
   /curations:
     x-swagger-router-controller: curations
@@ -33,6 +35,10 @@ paths:
           in: query
           description: last date
           required: false
+          type: string
+        - name: format
+          in: query
+          description: output format (defaults to json)
           type: string
       responses:
         "200":

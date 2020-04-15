@@ -1,4 +1,6 @@
 'use strict';
+var csvStringify = require('csv-stringify');
+var streamify = require('stream-array');
 /*
  'use strict' is not required but helpful for turning syntactical errors into true errors in the program flow
  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode
@@ -66,18 +68,26 @@ function curations(req, res) {
     if (err) {
       console.log(err.stack);
     }
-    res.json({
-      header: {
-        metadata: {
-          params: params
-        }
-      },
-      results: pgres.rows.map(r => {
-        if (!r.reason) {
-          delete r.reason; // delete null reason from response
-        }
-        return r;
-      })
-    });
+    if (req.swagger.params.format && req.swagger.params.format.value === 'txt') {
+      res.contentType('text/tab-separated-values');
+      var transformer = csvStringify({header:true, delimiter: '\t', columns: ['gene','email','flag','reason']});
+      var dTable = pgres.rows.map(r => [r.gene_id,r.email,r.flag,r.reason]);
+      streamify(dTable).pipe(transformer).pipe(res);
+    }
+    else {
+      res.json({
+        header: {
+          metadata: {
+            params: params
+          }
+        },
+        results: pgres.rows.map(r => {
+          if (!r.reason) {
+            delete r.reason; // delete null reason from response
+          }
+          return r;
+        })
+      });
+    }
   })
 }
