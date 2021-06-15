@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fetch = require('node-fetch');
 const _ = require('lodash');
-const url = 'http://devdata.gramene.org/curation/curations?since=2020-03-10';
+const url = 'http://devdata.gramene.org/curation/curations?since=2021-06-06';
 
 function getReason(r) {
   switch (r) {
