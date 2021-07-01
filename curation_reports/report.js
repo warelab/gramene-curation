@@ -30,7 +30,8 @@ function uniqify(a) {
 fetch(url)
 .then(res => res.json())
 .then(json => {
-  const curations = json.results;
+  const vitvi_re = new RegExp('Vitvi');
+  const curations = json.results.filter(c => vitvi_re.test(c.gene_id));
   console.log(`curations\t${curations.length}`);
   let genes={};
   let reasonFrequency={};
