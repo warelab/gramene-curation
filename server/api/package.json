@@ -12,11 +12,11 @@
     "express": "^4.12.3",
     "pg": "^7.18.2",
     "stream-array": "^1.1.2",
-    "swagger-express-mw": "^0.1.0"
+    "swagger-express-mw": "^0.7.0"
   },
   "devDependencies": {
     "should": "^7.1.0",
-    "supertest": "^1.0.0"
+    "supertest": "^6.3.3"
   },
   "scripts": {
     "start": "node app.js",
