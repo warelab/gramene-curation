@@ -51,43 +51,98 @@ function curations(req, res) {
       - id
   
 */
-  var fields = "g.gene_id,a.email,f.label as flag,c.pk as id,c.timestamp,fa.label as reason";
-  var tables = "account a, curation c left join curation_to_flag_annotation ctfa on c.pk = ctfa.curation_pk left join flag_annotation fa on ctfa.flag_annotation_pk = fa.pk, gene g, flag f";
-  var conditions  = "a.pk = c.account_pk and c.gene_pk = g.pk and c.flag_pk = f.pk and f.label != 'curate'";
+  var fields = "g.gene_id,a.email,f.label as flag,c.pk as id,c.timestamp,fa.label as reason";//",gt.tree_id,gt.set_id";
+  var tables = "curation c"
+  + " left join account a on c.account_pk = a.pk"
+  + " left join curation_to_flag_annotation ctfa on c.pk = ctfa.curation_pk"
+  + " left join flag_annotation fa on ctfa.flag_annotation_pk = fa.pk"
+  + " left join gene g on c.gene_pk = g.pk"
+  // + " left join gene_to_gene_tree gtgt on c.gene_pk = gtgt.gene_pk"
+  // + " left join gene_tree gt on gtgt.gene_tree_pk = gt.pk"
+  + " left join flag f on c.flag_pk = f.pk";
+  var conditions  = "f.label != 'curate' and c.timestamp >= '2000-01-01'::date";
   var params = {};
   if (req.swagger.params.since && req.swagger.params.since.value) {
-    conditions += ` and c.timestamp >= '${req.swagger.params.since.value}'`;
+    conditions += ` and c.timestamp >= '${req.swagger.params.since.value}'::date`;
     params.since = req.swagger.params.since.value;
   }
   if (req.swagger.params.until && req.swagger.params.until.value) {
-    conditions += ` and c.timestamp <= '${req.swagger.params.until.value}'`;
+    conditions += ` and c.timestamp <= '${req.swagger.params.until.value}'::date`;
     params.until = req.swagger.params.until.value;
   }
-  var sql = `select ${fields} from ${tables} where ${conditions}`;
+  if (req.swagger.params.flagged && req.swagger.params.flagged.value) {
+    conditions += " and f.label != 'okay'"
+    params.flagged = true;
+  }
+  if (req.swagger.params.idList && req.swagger.params.idList.value) {
+    function quotify(str) {
+      return `'${str.split(',').join("','")}'`;
+    }
+    conditions += ` and g.gene_id IN (${quotify(req.swagger.params.idList.value)})`
+    params.idList = req.swagger.params.idList.value;
+  }
+  var sql = `select ${fields} from ${tables} where ${conditions} order by c.timestamp`;
   client.query(sql, (err, pgres) => {
     if (err) {
       console.log(err.stack);
     }
     if (req.swagger.params.format && req.swagger.params.format.value === 'txt') {
       res.contentType('text/tab-separated-values');
-      var transformer = csvStringify({header:true, delimiter: '\t', columns: ['gene','email','flag','reason']});
-      var dTable = pgres.rows.map(r => [r.gene_id,r.email,r.flag,r.reason]);
+      var transformer = csvStringify({header:true, delimiter: '\t', columns: ['gene_id','email','flag','reason','timestamp']});//,'tree_id','set_id']});
+      const formatDate = timestamp => {
+        var date = new Date(timestamp);
+        return `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+      };
+      var dTable = pgres.rows.map(r => [r.gene_id,r.email,r.flag,r.reason,formatDate(r.timestamp)]);//,r.tree_id,r.set_id]);
       streamify(dTable).pipe(transformer).pipe(res);
     }
     else {
+      var rows = 1000000;
+      if (req.swagger.params.rows && req.swagger.params.rows.value >=0) {
+        rows = req.swagger.params.rows.value;
+      }
+      var minFlagged = 0;
+      if (req.swagger.params.minFlagged && req.swagger.params.minFlagged.value > 0) {
+        minFlagged = req.swagger.params.minFlagged.value;
+      }
+      let results = [];
+      let geneTally = {}
+      pgres.rows.forEach(r => {
+        if (!r.reason) {
+          delete r.reason; // delete null reason from response
+        }
+        if (!r.timestamp) {
+          delete r.timestamp; // delete null timestamp
+        }
+        if (results.length < rows) {
+          results.push(r);
+        }
+        if (!geneTally.hasOwnProperty(r.gene_id)) {
+          geneTally[r.gene_id] = {
+            flag: {},
+            okay: {}
+          }
+        }
+        if (geneTally[r.gene_id].hasOwnProperty(r.flag)) {
+          geneTally[r.gene_id][r.flag][r.email] = 1;
+        }
+      });
       res.json({
         header: {
           metadata: {
             params: params
           }
         },
-        results: pgres.rows.map(r => {
-          if (!r.reason) {
-            delete r.reason; // delete null reason from response
+        results: results,
+        genes: Object.keys(geneTally).map(gene_id => {
+          let gt = geneTally[gene_id];
+          return {
+            gene_id: gene_id,
+            okay: Object.keys(gt.okay).length,
+            flagged: Object.keys(gt.flag).length
           }
-          return r;
-        })
-      });
+        }).filter(g => g.flagged >= minFlagged)
+      })
     }
   })
 }

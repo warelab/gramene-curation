@@ -40,6 +40,22 @@ paths:
           in: query
           description: output format (defaults to json)
           type: string
+        - name: flagged
+          in: query
+          description: only output flagged genes
+          type: boolean
+        - name: idList
+          in: query
+          description: comma separated list of gene identifiers
+          type: string
+        - name: rows
+          in: query
+          description: number of results to return (-1 for all)
+          type: integer
+        - name: minFlagged
+          in: query
+          description: number of users who have flagged a gene for it to be included in genes list
+          type: integer
       responses:
         "200":
           description: Success
@@ -94,6 +110,10 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Curation'
+      genes:
+         type: array
+         items:
+           $ref: '#/definitions/Genes'
   Header:
     required:
       - metadata
@@ -120,14 +140,23 @@ definitions:
         type: string
       flag:
         type: string
-        enum:
-          - "okay"
-          - "flag"
       reason:
         type: string
       timestamp:
         type: string
       id:
+        type: integer
+  Genes:
+    required:
+      - gene_id
+      - okay
+      - flagged
+    properties:
+      gene_id:
+        type: string
+      okay:
+        type: integer
+      flagged:
         type: integer
   ErrorResponse:
     required:
