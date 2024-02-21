@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fetch = require('node-fetch');
 const _ = require('lodash');
-const url = 'http://devdata.gramene.org/curation/curations?since=2020-03-10';
+const url = 'http://devdata.gramene.org/curation/curations?since=2021-06-06';
 
 function getReason(r) {
   switch (r) {
@@ -30,7 +30,8 @@ function uniqify(a) {
 fetch(url)
 .then(res => res.json())
 .then(json => {
-  const curations = json.results;
+  const vitvi_re = new RegExp('Vitvi');
+  const curations = json.results.filter(c => vitvi_re.test(c.gene_id));
   console.log(`curations\t${curations.length}`);
   let genes={};
   let reasonFrequency={};

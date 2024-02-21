@@ -140,6 +140,10 @@ definitions:
         type: string
       flag:
         type: string
+        enum:
+          - "okay"
+          - "flag"
+          - "poor"
       reason:
         type: string
       timestamp:
