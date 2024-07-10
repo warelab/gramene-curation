@@ -51,7 +51,11 @@ function curations(req, res) {
       - id
   
 */
-  var fields = "g.gene_id,a.email,f.label as flag,c.pk as id,c.timestamp,fa.label as reason";//",gt.tree_id,gt.set_id";
+  var fields = "g.gene_id,'suppressed@site.com' as email,f.label as flag,c.pk as id,c.timestamp,fa.label as reason";//",gt.tree_id,gt.set_id";`
+  if (req.swagger.params.showEmail && req.swagger.params.showEmail.value) {
+    fields = "g.gene_id,a.email,f.label as flag,c.pk as id,c.timestamp,fa.label as reason";//",gt.tree_id,gt.set_id";
+//    console.error("showEmail is true?",req.swagger.params.showEmail);
+  }
   var tables = "curation c"
   + " left join account a on c.account_pk = a.pk"
   + " left join curation_to_flag_annotation ctfa on c.pk = ctfa.curation_pk"
@@ -74,6 +78,10 @@ function curations(req, res) {
     conditions += " and f.label != 'okay'"
     params.flagged = true;
   }
+  if (req.swagger.params.email && req.swagger.params.email.value) {
+    conditions += ` and a.email like '%${req.swagger.params.email.value}%'`;
+    params.email = req.swagger.params.email.value;
+  }
   if (req.swagger.params.idList && req.swagger.params.idList.value) {
     function quotify(str) {
       return `'${str.split(',').join("','")}'`;
@@ -82,6 +90,7 @@ function curations(req, res) {
     params.idList = req.swagger.params.idList.value;
   }
   var sql = `select ${fields} from ${tables} where ${conditions} order by c.timestamp`;
+  // console.error(sql);
   client.query(sql, (err, pgres) => {
     if (err) {
       console.log(err.stack);

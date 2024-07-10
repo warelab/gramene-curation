@@ -40,6 +40,10 @@ paths:
           in: query
           description: output format (defaults to json)
           type: string
+        - name: email 
+          in: query
+          description: string for filtering by email address 
+          type: string
         - name: flagged
           in: query
           description: only output flagged genes
@@ -52,6 +56,10 @@ paths:
           in: query
           description: number of results to return (-1 for all)
           type: integer
+        - name: showEmail
+          in: query
+          description: show the curator email
+          type: boolean
         - name: minFlagged
           in: query
           description: number of users who have flagged a gene for it to be included in genes list
@@ -140,10 +148,6 @@ definitions:
         type: string
       flag:
         type: string
-        enum:
-          - "okay"
-          - "flag"
-          - "poor"
       reason:
         type: string
       timestamp:
